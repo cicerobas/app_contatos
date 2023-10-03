@@ -1,3 +1,4 @@
+import 'package:app_contatos/widgets/contact_image_picker.dart';
 import 'package:flutter/material.dart';
 
 class NewContactPage extends StatefulWidget {
@@ -14,29 +15,9 @@ class _NewContactPageState extends State<NewContactPage> {
         appBar: AppBar(
           title: const Text('Novo Contato'),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Center(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(bottom: 5),
-                  child: const CircleAvatar(
-                    backgroundImage:
-                        AssetImage('assets/images/default_image.png'),
-                    radius: 80,
-                  ),
-                ),
-                OutlinedButton(
-                    onPressed: () {},
-                    child: const Text(
-                      'Adicionar Foto',
-                      style: TextStyle(fontSize: 16),
-                    ))
-              ],
-            ),
-          ),
+        body: const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: ContactImagePicker(),
         ));
   }
 }
