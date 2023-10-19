@@ -7,6 +7,7 @@ environment:
   sdk: '>=3.1.0 <4.0.0'
 
 dependencies:
+  brasil_fields: ^1.14.0
   flutter:
     sdk: flutter
   image_cropper: ^5.0.0
