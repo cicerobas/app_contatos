@@ -1,3 +1,5 @@
+#DotEnv
+*.env
 # Miscellaneous
 *.class
 *.log

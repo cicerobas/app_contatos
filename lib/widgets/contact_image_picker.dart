@@ -7,17 +7,24 @@ import 'package:image_picker/image_picker.dart';
 class ContactImagePicker extends StatefulWidget {
   const ContactImagePicker({super.key});
 
+  static File croppedImage = File('assets/images/default_image.png');
+  static late bool isDefaultImage;
+
   @override
   State<ContactImagePicker> createState() => _ContactImagePickerState();
 }
 
 class _ContactImagePickerState extends State<ContactImagePicker> {
   final ImagePicker _picker = ImagePicker();
+  late ImageProvider contactImage;
   XFile? _image;
-  ImageProvider _contactImage =
-      const AssetImage('assets/images/default_image.png');
 
-  bool isDefaultImage = true;
+  @override
+  void initState() {
+    ContactImagePicker.isDefaultImage = true;
+    contactImage = const AssetImage('assets/images/default_image.png');
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +38,7 @@ class _ContactImagePickerState extends State<ContactImagePicker> {
               borderRadius: BorderRadius.circular(80),
               onTap: () => _showImageSourceBottomSheet(context),
               child: CircleAvatar(
-                backgroundImage: _contactImage,
+                backgroundImage: contactImage,
                 radius: 80,
               ),
             ),
@@ -39,7 +46,9 @@ class _ContactImagePickerState extends State<ContactImagePicker> {
           OutlinedButton(
               onPressed: () => _showImageSourceBottomSheet(context),
               child: Text(
-                isDefaultImage ? 'Adicionar Foto' : 'Alterar Foto',
+                ContactImagePicker.isDefaultImage
+                    ? 'Adicionar Foto'
+                    : 'Alterar Foto',
                 style: const TextStyle(fontSize: 16),
               ))
         ],
@@ -71,13 +80,13 @@ class _ContactImagePickerState extends State<ContactImagePicker> {
                 leading: const Icon(Icons.photo_camera),
                 title: const Text('Camera'),
               ),
-              if (!isDefaultImage)
+              if (!ContactImagePicker.isDefaultImage)
                 ListTile(
                   onTap: () {
                     setState(() {
-                      _contactImage =
+                      contactImage =
                           const AssetImage('assets/images/default_image.png');
-                      isDefaultImage = true;
+                      ContactImagePicker.isDefaultImage = true;
                     });
                     Navigator.pop(context);
                   },
@@ -95,10 +104,10 @@ class _ContactImagePickerState extends State<ContactImagePicker> {
     _image = await _picker.pickImage(source: src);
 
     if (_image != null) {
-      File croppedImage = await _cropSelectedImage(_image!.path);
+      ContactImagePicker.croppedImage = await _cropSelectedImage(_image!.path);
+      contactImage = FileImage(ContactImagePicker.croppedImage);
       setState(() {
-        _contactImage = FileImage(croppedImage);
-        isDefaultImage = false;
+        ContactImagePicker.isDefaultImage = false;
       });
     }
   }

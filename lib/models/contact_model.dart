@@ -9,8 +9,7 @@ class ContactModel {
   bool? favorite;
 
   ContactModel(
-      {this.objectId,
-      this.tags,
+      {this.tags,
       this.firstName,
       this.lastName,
       this.phoneNumber,
@@ -31,7 +30,6 @@ class ContactModel {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['objectId'] = objectId;
     data['tags'] = tags;
     data['first_name'] = firstName;
     data['last_name'] = lastName;

@@ -1,6 +1,11 @@
+import 'package:app_contatos/models/contact_model.dart';
+import 'package:app_contatos/repositories/contact_repository.dart';
+import 'package:app_contatos/widgets/contact_image_picker.dart';
 import 'package:brasil_fields/brasil_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart';
 
 class NewContactForm extends StatefulWidget {
   const NewContactForm({super.key});
@@ -11,12 +16,19 @@ class NewContactForm extends StatefulWidget {
 
 class _NewContactFormState extends State<NewContactForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final firstNameController = TextEditingController();
-  final lastNameController = TextEditingController();
-  final phoneController = TextEditingController();
-  final emailController = TextEditingController();
+  final firstNameController = TextEditingController(text: '');
+  final lastNameController = TextEditingController(text: '');
+  final phoneController = TextEditingController(text: '');
+  final emailController = TextEditingController(text: '');
 
-  var tags = {'Amigo': false, 'Familia': false, 'Trabalho': false};
+  Map<String, bool> tags = {
+    'Amigo': false,
+    'Familia': false,
+    'Trabalho': false
+  };
+  bool isSaving = false;
+  String? imgPath;
+  final contactRepository = ContactRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -107,13 +119,32 @@ class _NewContactFormState extends State<NewContactForm> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ElevatedButton(
-                        onPressed: () {
-                          debugPrint(phoneController.text.length.toString());
+                        onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            debugPrint('Form OK');
+                            await saveNewContact().then((value) => value
+                                ? Navigator.pop(context)
+                                : ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Erro ao salvar contato'),
+                                    ),
+                                  ));
                           }
                         },
-                        child: const Text('Salvar')),
+                        child: isSaving
+                            ? const Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Text('Salvando  '),
+                                  SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ))
+                                ],
+                              )
+                            : const Text('Salvar')),
                     ElevatedButton(
                         onPressed: () {
                           Navigator.pop(context);
@@ -148,5 +179,29 @@ class _NewContactFormState extends State<NewContactForm> {
         onPressed: () {},
       )
     ]);
+  }
+
+  Future<bool> saveNewContact() async {
+    setState(() {
+      isSaving = true;
+    });
+
+    final dir = await getApplicationDocumentsDirectory();
+    final fileName = basename(ContactImagePicker.croppedImage.path)
+        .replaceAll('image_cropper_', '');
+
+    if (!ContactImagePicker.isDefaultImage) {
+      imgPath = '${dir.path}/$fileName';
+      ContactImagePicker.croppedImage.copy(imgPath!);
+    }
+
+    return await contactRepository.saveNewContact(ContactModel(
+        firstName: firstNameController.text,
+        lastName: lastNameController.text,
+        phoneNumber: phoneController.text,
+        email: emailController.text,
+        imagePath: imgPath,
+        favorite: false,
+        tags: tags.keys.toList().where((e) => tags[e] == true).toList()));
   }
 }
