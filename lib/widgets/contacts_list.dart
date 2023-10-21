@@ -32,9 +32,12 @@ class _ContactsListState extends State<ContactsList> {
         contactModel = savedContacts.results[index];
         ImageProvider contactImg =
             const AssetImage('assets/images/default_image.png');
-        if (contactModel.imagePath != null) {
+
+        if (contactModel.imagePath != null &&
+            File(contactModel.imagePath!).existsSync()) {
           contactImg = FileImage(File(contactModel.imagePath!));
         }
+
         return Card(
           child: ListTile(
             leading: CircleAvatar(backgroundImage: contactImg, radius: 30),
