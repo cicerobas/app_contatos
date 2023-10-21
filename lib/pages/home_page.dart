@@ -2,6 +2,9 @@ import 'package:app_contatos/pages/new_contact_page.dart';
 import 'package:app_contatos/widgets/contacts_list.dart';
 import 'package:flutter/material.dart';
 
+import '../models/saved_contacts_model.dart';
+import '../repositories/contact_repository.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -10,6 +13,17 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  var contactRepository = ContactRepository();
+  var savedContacts = SavedContactsModel([]);
+
+  bool? shouldRefresh = true;
+
+  @override
+  void initState() {
+    _loadContacts();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,14 +35,26 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const NewContactPage(),
-            )),
+        onPressed: () async {
+          shouldRefresh = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const NewContactPage(),
+              ));
+          if (shouldRefresh != null && shouldRefresh!) {
+            _loadContacts();
+          }
+        },
         child: const Icon(Icons.add),
       ),
-      body: const ContactsList(),
+      body: ContactsList(
+        savedContacts: savedContacts,
+      ),
     );
+  }
+
+  void _loadContacts() async {
+    savedContacts = await contactRepository.getContacts();
+    setState(() {});
   }
 }

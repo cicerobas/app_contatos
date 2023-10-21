@@ -122,7 +122,7 @@ class _NewContactFormState extends State<NewContactForm> {
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
                             await saveNewContact().then((value) => value
-                                ? Navigator.pop(context)
+                                ? Navigator.pop(context, true)
                                 : ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text('Erro ao salvar contato'),
