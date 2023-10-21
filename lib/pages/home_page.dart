@@ -1,4 +1,5 @@
 import 'package:app_contatos/pages/new_contact_page.dart';
+import 'package:app_contatos/widgets/contacts_list.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -27,6 +28,7 @@ class _HomePageState extends State<HomePage> {
             )),
         child: const Icon(Icons.add),
       ),
+      body: const ContactsList(),
     );
   }
 }

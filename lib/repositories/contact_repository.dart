@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:app_contatos/models/contact_model.dart';
+import 'package:app_contatos/models/saved_contacts_model.dart';
 import '../services/custom_dio.dart';
 
 class ContactRepository {
@@ -12,5 +13,10 @@ class ContactRepository {
       return true;
     }
     return false;
+  }
+
+  Future<SavedContactsModel> getContacts() async {
+    var response = await _customDio.dio.get('');
+    return SavedContactsModel.fromJson(response.data);
   }
 }
