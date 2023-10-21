@@ -19,39 +19,42 @@ class _ContactsListState extends State<ContactsList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: ListView.builder(
-      itemCount: widget.savedContacts.results.length,
-      itemBuilder: (context, index) {
-        contactModel = widget.savedContacts.results[index];
-        ImageProvider contactImg =
-            const AssetImage('assets/images/default_image.png');
+        body: Padding(
+      padding: const EdgeInsets.all(6),
+      child: ListView.builder(
+        itemCount: widget.savedContacts.results.length,
+        itemBuilder: (context, index) {
+          contactModel = widget.savedContacts.results[index];
+          ImageProvider contactImg =
+              const AssetImage('assets/images/default_image.png');
 
-        if (contactModel.imagePath != null &&
-            File(contactModel.imagePath!).existsSync()) {
-          contactImg = FileImage(File(contactModel.imagePath!));
-        }
+          if (contactModel.imagePath != null &&
+              File(contactModel.imagePath!).existsSync()) {
+            contactImg = FileImage(File(contactModel.imagePath!));
+          }
 
-        return Card(
-          child: ListTile(
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ContactDetailPage(
-                      contactModel: widget.savedContacts.results[index]),
-                )),
-            leading: CircleAvatar(backgroundImage: contactImg, radius: 30),
-            title: Text(
-              '${contactModel.firstName!} ${contactModel.lastName!}',
-              style: const TextStyle(fontSize: 20),
+          return Card(
+            child: ListTile(
+              onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ContactDetailPage(
+                        contactModel: widget.savedContacts.results[index]),
+                  )),
+              leading: CircleAvatar(backgroundImage: contactImg, radius: 30),
+              title: Text(
+                '${contactModel.firstName!} ${contactModel.lastName!}',
+                style: const TextStyle(fontSize: 20),
+              ),
+              subtitle: Text(contactModel.phoneNumber!),
+              trailing: IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                      contactModel.favorite! ? Icons.star : Icons.star_border)),
             ),
-            subtitle: Text(contactModel.phoneNumber!),
-            trailing: IconButton(
-                onPressed: () {},
-                icon: Icon(
-                    contactModel.favorite! ? Icons.star : Icons.star_border)),
-          ),
-        );
-      },
+          );
+        },
+      ),
     ));
   }
 }

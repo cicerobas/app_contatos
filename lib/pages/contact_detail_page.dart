@@ -1,18 +1,21 @@
 import 'dart:io';
 
 import 'package:app_contatos/models/contact_model.dart';
+import 'package:app_contatos/pages/home_page.dart';
+import 'package:app_contatos/repositories/contact_repository.dart';
 import 'package:flutter/material.dart';
 
 class ContactDetailPage extends StatelessWidget {
   const ContactDetailPage({super.key, required this.contactModel});
 
   final ContactModel contactModel;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () => _deleteContact(contactModel.objectId!, context),
             icon: const Icon(Icons.delete),
             iconSize: 28,
           ),
@@ -133,5 +136,45 @@ class ContactDetailPage extends StatelessWidget {
     return (path != null && File(path).existsSync())
         ? FileImage(File(contactModel.imagePath!))
         : const AssetImage('assets/images/default_image.png');
+  }
+
+  _deleteContact(String objectId, BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text(
+            'Deletar contato?',
+            textAlign: TextAlign.center,
+          ),
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                  onPressed: () {
+                    ContactRepository()
+                        .deleteContact(objectId)
+                        .then((value) => Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const HomePage(),
+                            ),
+                            (route) => false));
+                  },
+                  child: const Text(
+                    'Sim',
+                    style: TextStyle(fontSize: 18),
+                  )),
+              ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Não',
+                    style: TextStyle(fontSize: 18),
+                  ))
+            ],
+          ),
+        );
+      },
+    );
   }
 }
