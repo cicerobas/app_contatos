@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:app_contatos/models/contact_model.dart';
 import 'package:app_contatos/pages/home_page.dart';
+import 'package:app_contatos/pages/new_contact_page.dart';
 import 'package:app_contatos/repositories/contact_repository.dart';
 import 'package:brasil_fields/brasil_fields.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,6 @@ class ContactDetailPage extends StatelessWidget {
   const ContactDetailPage({super.key, required this.contactModel});
 
   final ContactModel contactModel;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,7 +22,12 @@ class ContactDetailPage extends StatelessWidget {
             iconSize: 28,
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => NewContactPage(
+                      isEditing: true, contactModel: contactModel),
+                )),
             icon: const Icon(Icons.edit),
             iconSize: 28,
           )

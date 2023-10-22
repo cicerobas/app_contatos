@@ -19,6 +19,14 @@ class ContactRepository {
     await _customDio.dio.delete('/$objectId');
   }
 
+  Future<bool> updateContact(String objectId, ContactModel contactModel) async {
+    var response = await _customDio.dio.put('/$objectId', data: contactModel);
+    if (response.statusCode == 200) {
+      return true;
+    }
+    return false;
+  }
+
   Future<SavedContactsModel> getContacts() async {
     var response = await _customDio.dio.get('');
     return SavedContactsModel.fromJson(response.data);

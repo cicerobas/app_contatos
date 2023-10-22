@@ -1,4 +1,5 @@
 import 'package:app_contatos/models/contact_model.dart';
+import 'package:app_contatos/pages/home_page.dart';
 import 'package:app_contatos/repositories/contact_repository.dart';
 import 'package:app_contatos/widgets/contact_image_picker.dart';
 import 'package:brasil_fields/brasil_fields.dart';
@@ -8,7 +9,14 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
 
 class NewContactForm extends StatefulWidget {
-  const NewContactForm({super.key});
+  const NewContactForm({
+    super.key,
+    required this.isEditing,
+    this.contactModel,
+  });
+
+  final bool isEditing;
+  final ContactModel? contactModel;
 
   @override
   State<NewContactForm> createState() => _NewContactFormState();
@@ -29,6 +37,22 @@ class _NewContactFormState extends State<NewContactForm> {
   bool isSaving = false;
   String? imgPath;
   final contactRepository = ContactRepository();
+
+  @override
+  void initState() {
+    if (widget.isEditing) {
+      firstNameController.text = widget.contactModel!.firstName!;
+      lastNameController.text = widget.contactModel!.lastName!;
+      phoneController.text = widget.contactModel!.phoneNumber!;
+      emailController.text = widget.contactModel!.email!;
+      widget.contactModel!.tags!.map((e) {
+        if (tags.keys.contains(e)) {
+          tags[e] = true;
+        }
+      }).toList();
+    }
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -121,8 +145,15 @@ class _NewContactFormState extends State<NewContactForm> {
                     ElevatedButton(
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            await saveNewContact().then((value) => value
-                                ? Navigator.pop(context, true)
+                            saveNewContact().then((value) => value
+                                ? widget.isEditing
+                                    ? Navigator.pushAndRemoveUntil(context,
+                                        MaterialPageRoute(
+                                        builder: (context) {
+                                          return const HomePage();
+                                        },
+                                      ), (route) => route.isFirst)
+                                    : Navigator.pop(context, true)
                                 : ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text('Erro ao salvar contato'),
@@ -192,16 +223,24 @@ class _NewContactFormState extends State<NewContactForm> {
 
     if (!ContactImagePicker.isDefaultImage) {
       imgPath = '${dir.path}/$fileName';
-      ContactImagePicker.croppedImage.copy(imgPath!);
+      if (!widget.isEditing) {
+        ContactImagePicker.croppedImage.copy(imgPath!);
+      }
     }
 
-    return await contactRepository.saveNewContact(ContactModel(
+    ContactModel contactData = ContactModel(
         firstName: firstNameController.text,
         lastName: lastNameController.text,
         phoneNumber: phoneController.text,
         email: emailController.text,
         imagePath: imgPath,
         favorite: false,
-        tags: tags.keys.toList().where((e) => tags[e] == true).toList()));
+        tags: tags.keys.toList().where((e) => tags[e] == true).toList());
+
+    if (widget.isEditing) {
+      return await contactRepository.updateContact(
+          widget.contactModel!.objectId!, contactData);
+    }
+    return await contactRepository.saveNewContact(contactData);
   }
 }

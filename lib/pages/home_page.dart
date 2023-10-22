@@ -16,7 +16,7 @@ class _HomePageState extends State<HomePage> {
   var contactRepository = ContactRepository();
   var savedContacts = SavedContactsModel([]);
 
-  bool? shouldRefresh = true;
+  static bool? shouldRefresh = true;
 
   @override
   void initState() {
@@ -39,7 +39,9 @@ class _HomePageState extends State<HomePage> {
           shouldRefresh = await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const NewContactPage(),
+                builder: (_) => const NewContactPage(
+                  isEditing: false,
+                ),
               ));
           if (shouldRefresh != null && shouldRefresh!) {
             _loadContacts();

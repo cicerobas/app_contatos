@@ -1,12 +1,19 @@
 import 'dart:io';
 
+import 'package:app_contatos/models/contact_model.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ContactImagePicker extends StatefulWidget {
-  const ContactImagePicker({super.key});
+  const ContactImagePicker({
+    super.key,
+    required this.isEditing,
+    this.contactModel,
+  });
 
+  final bool isEditing;
+  final ContactModel? contactModel;
   static File croppedImage = File('assets/images/default_image.png');
   static late bool isDefaultImage;
 
@@ -21,8 +28,20 @@ class _ContactImagePickerState extends State<ContactImagePicker> {
 
   @override
   void initState() {
-    ContactImagePicker.isDefaultImage = true;
-    contactImage = const AssetImage('assets/images/default_image.png');
+    if (widget.isEditing) {
+      if (widget.contactModel!.imagePath != null &&
+          File(widget.contactModel!.imagePath!).existsSync()) {
+        contactImage = FileImage(File(widget.contactModel!.imagePath!));
+        ContactImagePicker.croppedImage = File(widget.contactModel!.imagePath!);
+        ContactImagePicker.isDefaultImage = false;
+      } else {
+        ContactImagePicker.isDefaultImage = true;
+        contactImage = const AssetImage('assets/images/default_image.png');
+      }
+    } else {
+      ContactImagePicker.isDefaultImage = true;
+      contactImage = const AssetImage('assets/images/default_image.png');
+    }
     super.initState();
   }
 

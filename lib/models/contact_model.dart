@@ -8,6 +8,8 @@ class ContactModel {
   String? imagePath;
   bool? favorite;
 
+  ContactModel.empty();
+
   ContactModel(
       {this.tags,
       this.firstName,
