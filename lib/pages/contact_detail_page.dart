@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:app_contatos/models/contact_model.dart';
 import 'package:app_contatos/pages/home_page.dart';
 import 'package:app_contatos/repositories/contact_repository.dart';
+import 'package:brasil_fields/brasil_fields.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ContactDetailPage extends StatelessWidget {
   const ContactDetailPage({super.key, required this.contactModel});
@@ -51,7 +53,8 @@ class ContactDetailPage extends StatelessWidget {
                     Column(
                       children: [
                         IconButton(
-                            onPressed: () {},
+                            onPressed: () =>
+                                _callNumber(contactModel.phoneNumber!, 'tel'),
                             icon: const Icon(
                               Icons.call,
                               size: 36,
@@ -62,7 +65,8 @@ class ContactDetailPage extends StatelessWidget {
                     Column(
                       children: [
                         IconButton(
-                            onPressed: () {},
+                            onPressed: () =>
+                                _callNumber(contactModel.phoneNumber!, 'sms'),
                             icon: const Icon(
                               Icons.message,
                               size: 36,
@@ -73,7 +77,17 @@ class ContactDetailPage extends StatelessWidget {
                     Column(
                       children: [
                         IconButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              if (contactModel.email == null ||
+                                  contactModel.email == '') {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'Email indisponível para o contato')));
+                              } else {
+                                _sendEmail(contactModel.email!);
+                              }
+                            },
                             icon: const Icon(
                               Icons.mail,
                               size: 36,
@@ -130,6 +144,22 @@ class ContactDetailPage extends StatelessWidget {
             ],
           ),
         ));
+  }
+
+  void _sendEmail(String email) async {
+    final Uri params = Uri(scheme: 'mailto', path: email);
+    String url = params.toString();
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
+    }
+  }
+
+  void _callNumber(String phoneNumber, String action) async {
+    final url =
+        '$action:${UtilBrasilFields.obterTelefone(phoneNumber, mascara: false)}';
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
+    }
   }
 
   _getContactImage(String? path) {
