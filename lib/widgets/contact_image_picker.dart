@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:app_contatos/models/contact_model.dart';
+import 'package:app_contatos/utils/image_util.dart';
 import 'package:flutter/material.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ContactImagePicker extends StatefulWidget {
@@ -14,33 +14,25 @@ class ContactImagePicker extends StatefulWidget {
 
   final bool isEditing;
   final ContactModel? contactModel;
-  static File croppedImage = File('assets/images/default_image.png');
-  static late bool isDefaultImage;
 
   @override
   State<ContactImagePicker> createState() => _ContactImagePickerState();
 }
 
 class _ContactImagePickerState extends State<ContactImagePicker> {
-  final ImagePicker _picker = ImagePicker();
-  late ImageProvider contactImage;
-  XFile? _image;
-
+  ImageProvider? contactImage;
+  bool isDefaultImage = true;
   @override
   void initState() {
     if (widget.isEditing) {
-      if (widget.contactModel!.imagePath != null &&
-          File(widget.contactModel!.imagePath!).existsSync()) {
-        contactImage = FileImage(File(widget.contactModel!.imagePath!));
-        ContactImagePicker.croppedImage = File(widget.contactModel!.imagePath!);
-        ContactImagePicker.isDefaultImage = false;
-      } else {
-        ContactImagePicker.isDefaultImage = true;
-        contactImage = const AssetImage('assets/images/default_image.png');
+      String? imgPath = widget.contactModel!.imagePath;
+      if (imgPath != null && ImageUtil().checkContactImage(imgPath)) {
+        contactImage = FileImage(File(imgPath));
+        ImageUtil.selectedImage = File(imgPath);
+        isDefaultImage = false;
       }
     } else {
-      ContactImagePicker.isDefaultImage = true;
-      contactImage = const AssetImage('assets/images/default_image.png');
+      ImageUtil.selectedImage = null;
     }
     super.initState();
   }
@@ -57,7 +49,7 @@ class _ContactImagePickerState extends State<ContactImagePicker> {
               borderRadius: BorderRadius.circular(80),
               onTap: () => _showImageSourceBottomSheet(context),
               child: CircleAvatar(
-                backgroundImage: contactImage,
+                backgroundImage: contactImage ?? ImageUtil.defaultImage,
                 radius: 80,
               ),
             ),
@@ -65,9 +57,7 @@ class _ContactImagePickerState extends State<ContactImagePicker> {
           OutlinedButton(
               onPressed: () => _showImageSourceBottomSheet(context),
               child: Text(
-                ContactImagePicker.isDefaultImage
-                    ? 'Adicionar Foto'
-                    : 'Alterar Foto',
+                isDefaultImage ? 'Adicionar Foto' : 'Alterar Foto',
                 style: const TextStyle(fontSize: 16),
               ))
         ],
@@ -84,8 +74,18 @@ class _ContactImagePickerState extends State<ContactImagePicker> {
           child: Wrap(
             children: [
               ListTile(
-                onTap: () {
-                  _pickImageFromSource(ImageSource.gallery);
+                onTap: () async {
+                  ImageUtil()
+                      .pickImageFromSource(ImageSource.gallery)
+                      .then((value) {
+                    if (value) {
+                      setState(() {
+                        contactImage = FileImage(ImageUtil.selectedImage!);
+                        isDefaultImage = false;
+                      });
+                    }
+                  });
+
                   Navigator.pop(context);
                 },
                 leading: const Icon(Icons.photo),
@@ -93,19 +93,28 @@ class _ContactImagePickerState extends State<ContactImagePicker> {
               ),
               ListTile(
                 onTap: () {
-                  _pickImageFromSource(ImageSource.camera);
+                  ImageUtil()
+                      .pickImageFromSource(ImageSource.camera)
+                      .then((value) {
+                    if (value) {
+                      setState(() {
+                        contactImage = FileImage(ImageUtil.selectedImage!);
+                        isDefaultImage = false;
+                      });
+                    }
+                  });
                   Navigator.pop(context);
                 },
                 leading: const Icon(Icons.photo_camera),
                 title: const Text('Camera'),
               ),
-              if (!ContactImagePicker.isDefaultImage)
+              if (!isDefaultImage)
                 ListTile(
                   onTap: () {
                     setState(() {
-                      contactImage =
-                          const AssetImage('assets/images/default_image.png');
-                      ContactImagePicker.isDefaultImage = true;
+                      contactImage = ImageUtil.defaultImage;
+                      ImageUtil.selectedImage = null;
+                      isDefaultImage = true;
                     });
                     Navigator.pop(context);
                   },
@@ -117,46 +126,5 @@ class _ContactImagePickerState extends State<ContactImagePicker> {
         );
       },
     );
-  }
-
-  _pickImageFromSource(ImageSource src) async {
-    _image = await _picker.pickImage(source: src);
-
-    if (_image != null) {
-      ContactImagePicker.croppedImage = await _cropSelectedImage(_image!.path);
-      contactImage = FileImage(ContactImagePicker.croppedImage);
-      setState(() {
-        ContactImagePicker.isDefaultImage = false;
-      });
-    }
-  }
-
-  Future<File> _cropSelectedImage(String imgPath) async {
-    CroppedFile? croppedFile = await ImageCropper().cropImage(
-      sourcePath: imgPath,
-      cropStyle: CropStyle.circle,
-      aspectRatioPresets: [
-        CropAspectRatioPreset.square,
-        CropAspectRatioPreset.ratio3x2,
-        CropAspectRatioPreset.original,
-        CropAspectRatioPreset.ratio4x3,
-        CropAspectRatioPreset.ratio16x9
-      ],
-      uiSettings: [
-        AndroidUiSettings(
-            toolbarTitle: 'Ajustar Foto',
-            toolbarColor: Theme.of(context).primaryColor,
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.original,
-            lockAspectRatio: false),
-        IOSUiSettings(
-          title: 'Ajustar Foto',
-        ),
-        WebUiSettings(
-          context: context,
-        ),
-      ],
-    );
-    return File(croppedFile!.path);
   }
 }

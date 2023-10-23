@@ -1,12 +1,10 @@
 import 'package:app_contatos/models/contact_model.dart';
 import 'package:app_contatos/pages/home_page.dart';
 import 'package:app_contatos/repositories/contact_repository.dart';
-import 'package:app_contatos/widgets/contact_image_picker.dart';
+import 'package:app_contatos/utils/image_util.dart';
 import 'package:brasil_fields/brasil_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart';
 
 class NewContactForm extends StatefulWidget {
   const NewContactForm({
@@ -34,9 +32,9 @@ class _NewContactFormState extends State<NewContactForm> {
     'Familia': false,
     'Trabalho': false
   };
-  bool isSaving = false;
-  String? imgPath;
-  final contactRepository = ContactRepository();
+  bool _isSaving = false;
+  String? _imgPath;
+  final _contactRepository = ContactRepository();
 
   @override
   void initState() {
@@ -145,7 +143,7 @@ class _NewContactFormState extends State<NewContactForm> {
                     ElevatedButton(
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            saveNewContact().then((value) => value
+                            _saveContact().then((value) => value
                                 ? widget.isEditing
                                     ? Navigator.pushAndRemoveUntil(context,
                                         MaterialPageRoute(
@@ -161,7 +159,7 @@ class _NewContactFormState extends State<NewContactForm> {
                                   ));
                           }
                         },
-                        child: isSaving
+                        child: _isSaving
                             ? const Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceEvenly,
@@ -212,20 +210,12 @@ class _NewContactFormState extends State<NewContactForm> {
     ]);
   }
 
-  Future<bool> saveNewContact() async {
+  Future<bool> _saveContact() async {
     setState(() {
-      isSaving = true;
+      _isSaving = true;
     });
-
-    final dir = await getApplicationDocumentsDirectory();
-    final fileName = basename(ContactImagePicker.croppedImage.path)
-        .replaceAll('image_cropper_', '');
-
-    if (!ContactImagePicker.isDefaultImage) {
-      imgPath = '${dir.path}/$fileName';
-      if (!widget.isEditing) {
-        ContactImagePicker.croppedImage.copy(imgPath!);
-      }
+    if (ImageUtil.selectedImage != null) {
+      _imgPath = await ImageUtil().saveImage();
     }
 
     ContactModel contactData = ContactModel(
@@ -233,14 +223,14 @@ class _NewContactFormState extends State<NewContactForm> {
         lastName: lastNameController.text,
         phoneNumber: phoneController.text,
         email: emailController.text,
-        imagePath: imgPath,
-        favorite: false,
+        imagePath: _imgPath,
+        favorite: widget.contactModel?.favorite ?? false,
         tags: tags.keys.toList().where((e) => tags[e] == true).toList());
 
     if (widget.isEditing) {
-      return await contactRepository.updateContact(
+      return await _contactRepository.updateContact(
           widget.contactModel!.objectId!, contactData);
     }
-    return await contactRepository.saveNewContact(contactData);
+    return await _contactRepository.saveNewContact(contactData);
   }
 }

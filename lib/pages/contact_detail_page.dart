@@ -4,6 +4,7 @@ import 'package:app_contatos/models/contact_model.dart';
 import 'package:app_contatos/pages/home_page.dart';
 import 'package:app_contatos/pages/new_contact_page.dart';
 import 'package:app_contatos/repositories/contact_repository.dart';
+import 'package:app_contatos/utils/image_util.dart';
 import 'package:brasil_fields/brasil_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -12,6 +13,7 @@ class ContactDetailPage extends StatelessWidget {
   const ContactDetailPage({super.key, required this.contactModel});
 
   final ContactModel contactModel;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -168,9 +170,9 @@ class ContactDetailPage extends StatelessWidget {
   }
 
   _getContactImage(String? path) {
-    return (path != null && File(path).existsSync())
-        ? FileImage(File(contactModel.imagePath!))
-        : const AssetImage('assets/images/default_image.png');
+    return (path != null && ImageUtil().checkContactImage(path))
+        ? FileImage(File(path))
+        : ImageUtil.defaultImage;
   }
 
   _deleteContact(String objectId, BuildContext context) {
