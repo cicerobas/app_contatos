@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:app_contatos/models/contact_model.dart';
+import 'package:app_contatos/models/custom_tags_model.dart';
 import 'package:app_contatos/pages/home_page.dart';
 import 'package:app_contatos/pages/new_contact_page.dart';
 import 'package:app_contatos/repositories/contact_repository.dart';
@@ -9,10 +10,13 @@ import 'package:brasil_fields/brasil_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../repositories/custom_tag_repository.dart';
+
 class ContactDetailPage extends StatelessWidget {
-  const ContactDetailPage({super.key, required this.contactModel});
+  ContactDetailPage({super.key, required this.contactModel});
 
   final ContactModel contactModel;
+  final _customTagRepository = CustomTagRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -137,20 +141,40 @@ class ContactDetailPage extends StatelessWidget {
                       ),
                     )),
               ),
-              Wrap(
-                spacing: 8,
-                children: contactModel.tags!
-                    .map((tag) => ChoiceChip(
-                          label: Text(tag),
-                          selected: true,
-                          selectedColor:
-                              Theme.of(context).colorScheme.secondaryContainer,
-                        ))
-                    .toList(),
+              FutureBuilder(
+                initialData: const [
+                  Visibility(
+                    visible: false,
+                    child: ChoiceChip(
+                      label: Text(''),
+                      selected: false,
+                    ),
+                  )
+                ],
+                future: getTags(),
+                builder: (context, snapshot) {
+                  return Wrap(
+                    spacing: 8,
+                    children: snapshot.data!,
+                  );
+                },
               )
             ],
           ),
         ));
+  }
+
+  Future<List<ChoiceChip>> getTags() async {
+    CustomTagsModel customTagsModel =
+        await _customTagRepository.getCustomTags();
+    return contactModel.tags!
+        .where((e) => customTagsModel.results![0].tags!.contains(e))
+        .toList()
+        .map((tag) => ChoiceChip(
+              label: Text(tag),
+              selected: true,
+            ))
+        .toList();
   }
 
   void _sendEmail(String email) async {

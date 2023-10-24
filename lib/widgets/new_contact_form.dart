@@ -1,6 +1,8 @@
 import 'package:app_contatos/models/contact_model.dart';
+import 'package:app_contatos/models/custom_tags_model.dart';
 import 'package:app_contatos/pages/home_page.dart';
 import 'package:app_contatos/repositories/contact_repository.dart';
+import 'package:app_contatos/repositories/custom_tag_repository.dart';
 import 'package:app_contatos/utils/image_util.dart';
 import 'package:brasil_fields/brasil_fields.dart';
 import 'package:flutter/material.dart';
@@ -26,15 +28,14 @@ class _NewContactFormState extends State<NewContactForm> {
   final lastNameController = TextEditingController(text: '');
   final phoneController = TextEditingController(text: '');
   final emailController = TextEditingController(text: '');
+  final newTagController = TextEditingController(text: '');
 
-  Map<String, bool> tags = {
-    'Amigo': false,
-    'Familia': false,
-    'Trabalho': false
-  };
-  bool _isSaving = false;
+  Map<String, bool> customTags = {};
+  bool _isSaving = false, _updateTags = false;
   String? _imgPath;
+  CustomTagsModel customTagsModel = CustomTagsModel();
   final _contactRepository = ContactRepository();
+  final _customTagRepository = CustomTagRepository();
 
   @override
   void initState() {
@@ -43,12 +44,16 @@ class _NewContactFormState extends State<NewContactForm> {
       lastNameController.text = widget.contactModel!.lastName!;
       phoneController.text = widget.contactModel!.phoneNumber!;
       emailController.text = widget.contactModel!.email!;
-      widget.contactModel!.tags!.map((e) {
-        if (tags.keys.contains(e)) {
-          tags[e] = true;
-        }
-      }).toList();
     }
+    _loadCustomTags().then((value) {
+      if (widget.isEditing) {
+        widget.contactModel!.tags!.map((e) {
+          if (customTags.keys.contains(e)) {
+            customTags[e] = true;
+          }
+        }).toList();
+      }
+    });
     super.initState();
   }
 
@@ -186,28 +191,91 @@ class _NewContactFormState extends State<NewContactForm> {
   }
 
   Wrap _tagList() {
-    return Wrap(children: [
+    return Wrap(spacing: 8, children: [
       Wrap(
         spacing: 8,
-        children: tags.keys
+        children: customTags.keys
             .toList()
-            .map((tag) => FilterChip(
+            .map((tag) => InputChip(
                   label: Text(tag),
-                  selected: tags[tag]!,
+                  selected: customTags[tag]!,
                   onSelected: (value) {
                     setState(() {
-                      tags[tag] = value;
+                      customTags[tag] = value;
                     });
                   },
+                  onDeleted: () => _removeCustomTag(tag),
                 ))
             .toList(),
       ),
       InputChip(
-        //TODO inserir função de tag customizada
-        label: const Text('Nova Tag'),
-        onPressed: () {},
-      )
+          onPressed: () => _addCustomTag(),
+          label: const Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                'Nova Tag',
+                style: TextStyle(fontSize: 12),
+              ),
+              Icon(
+                Icons.add,
+                size: 18,
+              )
+            ],
+          ))
     ]);
+  }
+
+  _removeCustomTag(String tagKey) {
+    customTags.remove(tagKey);
+    customTagsModel.results![0].tags!.remove(tagKey);
+    _customTagRepository.updateCustomTags(customTagsModel);
+    setState(() {});
+  }
+
+  _addCustomTag() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Nova Tag',
+            textAlign: TextAlign.center,
+          ),
+          content: TextField(
+            controller: newTagController,
+            maxLength: 10,
+          ),
+          actions: [
+            ElevatedButton(
+                onPressed: () {
+                  customTags.addAll({newTagController.text: true});
+                  customTagsModel.results![0].tags!.add(newTagController.text);
+                  setState(() {
+                    _updateTags = true;
+                    newTagController.text = '';
+                  });
+                  Navigator.pop(context);
+                },
+                child: const Text('Adicionar')),
+            ElevatedButton(
+                onPressed: () {
+                  newTagController.text = '';
+                  Navigator.pop(context);
+                },
+                child: const Text('Cancelar'))
+          ],
+        );
+      },
+    );
+  }
+
+  Future _loadCustomTags() async {
+    customTagsModel = await _customTagRepository.getCustomTags();
+    for (var tag in customTagsModel.results![0].tags!) {
+      customTags.addAll({tag: false});
+    }
+    setState(() {});
   }
 
   Future<bool> _saveContact() async {
@@ -218,6 +286,10 @@ class _NewContactFormState extends State<NewContactForm> {
       _imgPath = await ImageUtil().saveImage();
     }
 
+    if (_updateTags) {
+      _customTagRepository.updateCustomTags(customTagsModel);
+    }
+
     ContactModel contactData = ContactModel(
         firstName: firstNameController.text,
         lastName: lastNameController.text,
@@ -225,7 +297,10 @@ class _NewContactFormState extends State<NewContactForm> {
         email: emailController.text,
         imagePath: _imgPath,
         favorite: widget.contactModel?.favorite ?? false,
-        tags: tags.keys.toList().where((e) => tags[e] == true).toList());
+        tags: customTags.keys
+            .toList()
+            .where((e) => customTags[e] == true)
+            .toList());
 
     if (widget.isEditing) {
       return await _contactRepository.updateContact(

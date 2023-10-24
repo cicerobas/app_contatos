@@ -4,7 +4,7 @@ import 'package:app_contatos/models/saved_contacts_model.dart';
 import '../services/custom_dio.dart';
 
 class ContactRepository {
-  final _customDio = CustomDio();
+  final _customDio = CustomDio('Contacts');
 
   Future<bool> saveNewContact(ContactModel contactModel) async {
     var response =
