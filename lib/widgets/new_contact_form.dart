@@ -192,9 +192,8 @@ class _NewContactFormState extends State<NewContactForm> {
 
   Wrap _tagList() {
     return Wrap(spacing: 8, children: [
-      Wrap(
-        spacing: 8,
-        children: customTags.keys
+      Wrap(spacing: 8, children: [
+        ...customTags.keys
             .toList()
             .map((tag) => InputChip(
                   label: Text(tag),
@@ -207,22 +206,22 @@ class _NewContactFormState extends State<NewContactForm> {
                   onDeleted: () => _removeCustomTag(tag),
                 ))
             .toList(),
-      ),
-      InputChip(
-          onPressed: () => _addCustomTag(),
-          label: const Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                'Nova Tag',
-                style: TextStyle(fontSize: 12),
-              ),
-              Icon(
-                Icons.add,
-                size: 18,
-              )
-            ],
-          ))
+        InputChip(
+            onPressed: () => _addCustomTag(),
+            label: const Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  'Nova Tag',
+                  style: TextStyle(fontSize: 12),
+                ),
+                Icon(
+                  Icons.add,
+                  size: 18,
+                )
+              ],
+            ))
+      ]),
     ]);
   }
 

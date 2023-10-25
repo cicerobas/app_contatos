@@ -45,20 +45,6 @@ class _ContactsListState extends State<ContactsList> {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Wrap(
               children: [
-                FilterChip(
-                  labelPadding: const EdgeInsets.all(0),
-                  label: favorite
-                      ? const Icon(Icons.star)
-                      : const Icon(Icons.star_border),
-                  selected: favorite,
-                  showCheckmark: false,
-                  onSelected: (value) {
-                    setState(() {
-                      favorite = value;
-                      _filterByFav();
-                    });
-                  },
-                ),
                 FutureBuilder(
                   initialData: [
                     Visibility(
@@ -73,7 +59,23 @@ class _ContactsListState extends State<ContactsList> {
                   builder: (context, snapshot) {
                     return Wrap(
                       spacing: 4,
-                      children: snapshot.data!,
+                      children: [
+                        FilterChip(
+                          labelPadding: const EdgeInsets.all(0),
+                          label: favorite
+                              ? const Icon(Icons.star)
+                              : const Icon(Icons.star_border),
+                          selected: favorite,
+                          showCheckmark: false,
+                          onSelected: (value) {
+                            setState(() {
+                              favorite = value;
+                              _filterByFav();
+                            });
+                          },
+                        ),
+                        ...snapshot.data!
+                      ],
                     );
                   },
                 )
