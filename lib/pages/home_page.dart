@@ -16,7 +16,7 @@ class _HomePageState extends State<HomePage> {
   var contactRepository = ContactRepository();
   var savedContacts = SavedContactsModel([]);
 
-  static bool? shouldRefresh = true;
+  bool isLoaded = true;
 
   @override
   void initState() {
@@ -27,36 +27,50 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Contatos',
-          style: TextStyle(fontSize: 26),
+        appBar: AppBar(
+          title: const Text(
+            'Contatos',
+            style: TextStyle(fontSize: 26),
+          ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          shouldRefresh = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const NewContactPage(
-                  isEditing: false,
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NewContactPage(isEditing: false),
+                )).then((value) {
+              setState(() {
+                if (value != null && value) {
+                  _loadContacts();
+                }
+              });
+            });
+          },
+          child: const Icon(Icons.add),
+        ),
+        body: savedContacts.results.isEmpty
+            ? const Center(
+                child: Text(
+                  'Nenhum Contato',
+                  style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
                 ),
-              ));
-          if (shouldRefresh != null && shouldRefresh!) {
-            _loadContacts();
-          }
-        },
-        child: const Icon(Icons.add),
-      ),
-      body: ContactsList(
-        savedContacts: savedContacts,
-      ),
-    );
+              )
+            : isLoaded
+                ? ContactsList(savedContacts: savedContacts)
+                : const Center(
+                    child: CircularProgressIndicator(),
+                  ));
   }
 
   void _loadContacts() async {
+    setState(() {
+      isLoaded = false;
+    });
     savedContacts = await contactRepository.getContacts();
-    setState(() {});
+    setState(() {
+      isLoaded = true;
+    });
   }
 }

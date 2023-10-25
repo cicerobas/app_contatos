@@ -82,7 +82,7 @@ class ContactDetailPage extends StatelessWidget {
                               Icons.message,
                               size: 36,
                             )),
-                        const Text('SMS')
+                        const Text('Texto')
                       ],
                     ),
                     Column(
